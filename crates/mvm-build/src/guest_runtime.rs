@@ -220,7 +220,7 @@ pub fn resolve_or_download_guest_runtime_quartet(
         version,
         arch,
         &packaged_runtime_locations(&executable)?,
-        &format!("https://github.com/tinylabscom/mvm/releases/download/v{version}"),
+        &format!("https://github.com/nearai/mvm/releases/download/v{version}"),
         true,
     )
 }

@@ -8,7 +8,9 @@ use mvm_client::release::github_download_base;
 use mvm_core::release_version::{ReleaseVersion, VersionSyntax};
 use mvm_runtime::shell::run_host;
 
-const GITHUB_REPO: &str = "tinylabscom/mvm";
+/// nearai/mvm: releases (and the guest runtime they ship) are published by
+/// this fork; see `mvm_core::release_trust`.
+const GITHUB_REPO: &str = "nearai/mvm";
 const SOURCE_HELPER_RELEASE: &str = "source-builds";
 const SOURCE_HELPER_BASE_URL_ENV: &str = "MVM_SOURCE_HELPER_BASE_URL";
 const SOURCE_HELPER_COMMIT_MARKER: &str = ".mvm-host-helpers-source-commit";

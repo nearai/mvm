@@ -5,8 +5,12 @@ pub const RELEASE_OIDC_ISSUER: &str = "https://token.actions.githubusercontent.c
 
 /// Identity templates for the workflow that signs release packs. `{version}`
 /// is replaced with the running binary's version before matching.
+///
+/// nearai/mvm: this fork's Linux releases are signed by its own workflow, so
+/// its binaries trust that identity instead of tinylabscom's release.yml.
+/// Boot-image and image-set trust below stay on tinylabscom.
 const RELEASE_IDENTITY_TEMPLATES: &[&str] =
-    &["https://github.com/tinylabscom/mvm/.github/workflows/release.yml@refs/tags/v{version}"];
+    &["https://github.com/nearai/mvm/.github/workflows/rts-release-linux.yml@refs/tags/v{version}"];
 
 /// Identity template for the workflow that signs boot image releases.
 ///

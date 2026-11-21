@@ -249,9 +249,11 @@ mod tests {
             ids.iter()
                 .all(|i| i.contains("@refs/tags/v0.17.0") && !i.contains("{version}"))
         );
-        assert!(
-            ids.iter()
-                .any(|i| i.contains(".github/workflows/release.yml"))
+        assert_eq!(
+            ids,
+            [
+                "https://github.com/nearai/mvm/.github/workflows/rts-release-linux.yml@refs/tags/v0.17.0"
+            ]
         );
     }
 

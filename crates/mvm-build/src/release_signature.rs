@@ -465,8 +465,10 @@ mod tests {
         assert!(!identities.is_empty(), "there must be a release identity");
         for identity in &identities {
             assert!(
-                identity.contains("release.yml"),
-                "only the release workflow signs release archives: {identity}"
+                identity.starts_with(
+                    "https://github.com/nearai/mvm/.github/workflows/rts-release-linux.yml@"
+                ),
+                "only this fork's release workflow signs release archives: {identity}"
             );
             assert!(
                 identity.ends_with(&format!("refs/tags/v{FIXTURE_VERSION}")),

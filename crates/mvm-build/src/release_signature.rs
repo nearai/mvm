@@ -71,7 +71,9 @@ pub struct ReleaseSignatureRequest<'a> {
 /// at the fetch site rather than an accident of which helper it reached for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ReleaseTrain {
-    /// `release.yml`, signing CLI tarballs under `refs/tags/v<version>`.
+    /// The CLI release train, signing CLI tarballs under the identity in
+    /// `mvm_core::release_trust` (this fork: the rts repository's
+    /// `mvm-linux.yml`, under `refs/tags/mvm-v<version>`).
     #[default]
     Cli,
     /// The retired `release-boot-image.yml`, which signed the legacy images
@@ -466,12 +468,12 @@ mod tests {
         for identity in &identities {
             assert!(
                 identity.starts_with(
-                    "https://github.com/nearai/mvm/.github/workflows/rts-release-linux.yml@"
+                    "https://github.com/nearai/nearai-red-sandbox/.github/workflows/mvm-linux.yml@"
                 ),
-                "only this fork's release workflow signs release archives: {identity}"
+                "only the rts repository's mvm workflow signs release archives: {identity}"
             );
             assert!(
-                identity.ends_with(&format!("refs/tags/v{FIXTURE_VERSION}")),
+                identity.ends_with(&format!("refs/tags/mvm-v{FIXTURE_VERSION}")),
                 "the identity must be pinned to this version's tag: {identity}"
             );
         }

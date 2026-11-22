@@ -9,8 +9,14 @@ use mvm_core::release_version::{ReleaseVersion, VersionSyntax};
 use mvm_runtime::shell::run_host;
 
 /// nearai/mvm: releases (and the guest runtime they ship) are published by
-/// this fork; see `mvm_core::release_trust`.
-const GITHUB_REPO: &str = "nearai/mvm";
+/// the rts repository under `mvm-v<version>` tags; see
+/// `mvm_core::release_trust`.
+const GITHUB_REPO: &str = "nearai/nearai-red-sandbox";
+/// The prefix of this fork's release tags in [`GITHUB_REPO`] (whose own
+/// `v*` tags are rts releases).
+pub(crate) const RELEASE_TAG_PREFIX: &str = "mvm-v";
+/// nearai/mvm: self-update is refused (see [`update`]).
+const RTS_PINNED: bool = true;
 const SOURCE_HELPER_RELEASE: &str = "source-builds";
 const SOURCE_HELPER_BASE_URL_ENV: &str = "MVM_SOURCE_HELPER_BASE_URL";
 const SOURCE_HELPER_COMMIT_MARKER: &str = ".mvm-host-helpers-source-commit";
@@ -621,7 +627,7 @@ pub(crate) fn prepare_release_host_binaries() -> Result<()> {
     if let Some(commit) = source_helper_commit()? {
         return prepare_source_host_binaries(&commit, target, install_dir, tmp.path());
     }
-    let tag = format!("v{}", current_version());
+    let tag = format!("{RELEASE_TAG_PREFIX}{}", current_version());
     download_release(&tag, target, tmp.path())?;
     let archive_name = format!("mvmctl-{target}.tar.gz");
     let archive_path = tmp.path().join(&archive_name);
@@ -1042,6 +1048,14 @@ fn install_announcement(current: &str, latest: &str) -> InstallAnnouncement {
 }
 
 pub fn update(check_only: bool, force: bool, skip_verify: bool) -> Result<()> {
+    // nearai/mvm: rts installs and pins this build, and the latest release in
+    // GITHUB_REPO is an rts release, not an mvm one.
+    if RTS_PINNED {
+        let _ = (check_only, force, skip_verify);
+        anyhow::bail!(
+            "this mvmctl is installed and pinned by rts (nearai-red-sandbox); update rts instead (rts setup or rts update)"
+        );
+    }
     // An install this command must not touch is refused before any network
     // traffic: the answer does not depend on what the latest release is.
     let current_exe =
@@ -1201,6 +1215,16 @@ mod tests {
         validate_source_helper_bundle, validate_source_helper_identity,
     };
     use mvm_build::artifact_acquisition::DistributionChannel;
+
+    /// rts installs and pins this build; `mvmctl update` would read the rts
+    /// repository's latest release, which is rts's own.
+    #[test]
+    fn self_update_is_refused_before_any_network_traffic() {
+        for (check, force) in [(true, false), (false, false), (false, true)] {
+            let e = super::update(check, force, false).unwrap_err().to_string();
+            assert!(e.contains("pinned by rts"), "{e}");
+        }
+    }
 
     #[cfg(unix)]
     #[test]

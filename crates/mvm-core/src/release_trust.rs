@@ -6,11 +6,14 @@ pub const RELEASE_OIDC_ISSUER: &str = "https://token.actions.githubusercontent.c
 /// Identity templates for the workflow that signs release packs. `{version}`
 /// is replaced with the running binary's version before matching.
 ///
-/// nearai/mvm: this fork's Linux releases are signed by its own workflow, so
-/// its binaries trust that identity instead of tinylabscom's release.yml.
-/// Boot-image and image-set trust below stay on tinylabscom.
-const RELEASE_IDENTITY_TEMPLATES: &[&str] =
-    &["https://github.com/nearai/mvm/.github/workflows/rts-release-linux.yml@refs/tags/v{version}"];
+/// nearai/mvm: this fork's Linux releases are built and signed by the rts
+/// repository (nearai/nearai-red-sandbox, workflow mvm-linux.yml) and tagged
+/// `mvm-v<version>` there, so its binaries trust that identity instead of
+/// tinylabscom's release.yml. Boot-image, image-set, source-helper and
+/// revocation trust below stay on tinylabscom.
+const RELEASE_IDENTITY_TEMPLATES: &[&str] = &[
+    "https://github.com/nearai/nearai-red-sandbox/.github/workflows/mvm-linux.yml@refs/tags/mvm-v{version}",
+];
 
 /// Identity template for the workflow that signs boot image releases.
 ///
@@ -247,13 +250,33 @@ mod tests {
         assert!(!ids.is_empty());
         assert!(
             ids.iter()
-                .all(|i| i.contains("@refs/tags/v0.17.0") && !i.contains("{version}"))
+                .all(|i| i.contains("@refs/tags/mvm-v0.17.0") && !i.contains("{version}"))
         );
         assert_eq!(
             ids,
             [
-                "https://github.com/nearai/mvm/.github/workflows/rts-release-linux.yml@refs/tags/v0.17.0"
+                "https://github.com/nearai/nearai-red-sandbox/.github/workflows/mvm-linux.yml@refs/tags/mvm-v0.17.0"
             ]
+        );
+    }
+
+    /// The rts workflow signs only the CLI release train. Boot images, image
+    /// sets, source helpers and revocations keep their tinylabscom producers,
+    /// so moving the CLI train cannot widen what those trust.
+    #[test]
+    fn only_the_cli_train_moves_to_the_rts_workflow() {
+        let others = BOOT_IMAGE_IDENTITY_TEMPLATES
+            .iter()
+            .chain(IMAGE_SET_IDENTITY_TEMPLATES)
+            .chain(SOURCE_HELPER_IDENTITY_TEMPLATES);
+        for t in others {
+            assert!(t.starts_with("https://github.com/tinylabscom/"), "{t}");
+            assert!(!t.contains("nearai"), "{t}");
+        }
+        assert!(
+            accepted_release_identities("1.0.0")
+                .iter()
+                .all(|i| i.starts_with("https://github.com/nearai/nearai-red-sandbox/.github/workflows/mvm-linux.yml@refs/tags/mvm-v"))
         );
     }
 

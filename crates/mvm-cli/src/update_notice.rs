@@ -74,10 +74,14 @@ fn interactive() -> bool {
         && std::env::var_os(OPT_OUT_ENV).is_none()
 }
 
+/// nearai/mvm: off. rts pins this build, and the latest release the notice
+/// would read is an rts release.
+const NOTICE_ENABLED: bool = false;
+
 /// Run the ambient notice. Called once after the command result settles;
 /// everything inside is best-effort and never propagates.
 pub(crate) fn maybe_notify() {
-    if !interactive() {
+    if !NOTICE_ENABLED || !interactive() {
         return;
     }
     let path = mvm_core::config::mvm_update_check_path();
@@ -98,6 +102,11 @@ pub(crate) fn maybe_notify() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_update_notice_is_off_in_the_rts_build() {
+        const { assert!(!NOTICE_ENABLED) };
+    }
 
     #[test]
     fn a_state_younger_than_a_day_is_fresh() {

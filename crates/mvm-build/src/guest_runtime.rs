@@ -205,6 +205,13 @@ pub fn install_signed_guest_runtime_archive(
     Ok(runtime)
 }
 
+/// Where this fork's release `version` (and its guest runtime) is published:
+/// the rts repository's `mvm-v<version>` release (see
+/// `mvm_core::release_trust`).
+pub fn release_download_base(version: &str) -> String {
+    format!("https://github.com/nearai/nearai-red-sandbox/releases/download/mvm-v{version}")
+}
+
 /// Acquire all four signed release files for portable packaging. Unlike the
 /// ordinary resolver, an authenticated legacy triplet may need network access
 /// to obtain its standalone checksum signature. Invalid evidence never falls
@@ -220,7 +227,7 @@ pub fn resolve_or_download_guest_runtime_quartet(
         version,
         arch,
         &packaged_runtime_locations(&executable)?,
-        &format!("https://github.com/nearai/mvm/releases/download/v{version}"),
+        &release_download_base(version),
         true,
     )
 }
@@ -1366,6 +1373,14 @@ pub mod release_fixture {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_release_guest_runtime_comes_from_the_rts_release() {
+        assert_eq!(
+            release_download_base("0.28.0-rts.2"),
+            "https://github.com/nearai/nearai-red-sandbox/releases/download/mvm-v0.28.0-rts.2"
+        );
+    }
     use mvm_core::image_set::{GitCommit, WorktreeState};
 
     #[test]

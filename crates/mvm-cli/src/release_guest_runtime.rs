@@ -30,7 +30,7 @@ use crate::ui;
 
 /// The release tag a CLI version is published under.
 fn release_tag(version: &str) -> String {
-    format!("v{version}")
+    format!("{}{version}", crate::update::RELEASE_TAG_PREFIX)
 }
 
 fn cache_root() -> PathBuf {
@@ -241,6 +241,17 @@ pub(crate) fn stage_for_update(tag: &str) -> Result<ReleaseGuestRuntime> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn release_tags_and_downloads_are_the_rts_repositorys() {
+        assert_eq!(release_tag("0.28.0-rts.2"), "mvm-v0.28.0-rts.2");
+        assert!(
+            crate::update::release_base(&release_tag("1.2.3"))
+                .ends_with("/nearai/nearai-red-sandbox/releases/download/mvm-v1.2.3"),
+            "{}",
+            crate::update::release_base(&release_tag("1.2.3"))
+        );
+    }
+
     const FIXTURE_VERSION: &str = "9.9.9";
 
     struct FirstUse {
@@ -406,9 +417,11 @@ mod tests {
     }
 
     #[test]
-    fn a_version_is_published_under_its_v_tag() {
-        assert_eq!(release_tag("0.23.1"), "v0.23.1");
-        assert_eq!(release_tag("0.24.0-rc.1"), "v0.24.0-rc.1");
+    fn a_version_is_published_under_its_mvm_v_tag() {
+        // nearai/mvm: published in the rts repository, whose own `v*` tags
+        // are rts releases.
+        assert_eq!(release_tag("0.23.1"), "mvm-v0.23.1");
+        assert_eq!(release_tag("0.24.0-rc.1"), "mvm-v0.24.0-rc.1");
     }
 
     /// A source build's version is usually unreleased; when its published
